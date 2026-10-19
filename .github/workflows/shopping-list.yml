@@ -1,0 +1,60 @@
+name: Shopping list
+
+on:
+  issues:
+    types: [opened, edited, closed, reopened]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: read
+
+# Only one run at a time, so two quick issue edits don't try to push at once
+concurrency:
+  group: shopping-list
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Generate shopping list
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            // Read the parts catalog
+            const parts = JSON.parse(fs.readFileSync('parts.json', 'utf8'));
+            console.log('Parts in catalog:', Object.keys(parts));
+
+            // Fetch all open issues (pull requests filtered out)
+            const issues = (await github.paginate(github.rest.issues.listForRepo, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              per_page: 100,
+            })).filter(issue => !issue.pull_request);
+
+            for (const issue of issues) {
+              console.log(`#${issue.number}: ${issue.title}`);
+            }
+
+            // TODO c: extract the "## Parts needed?" section from each issue body
+            // TODO d: parse the lines, sum quantities per part ID, collect unknown IDs
+            // TODO e: build markdown grouped by store
+
+            // f. Write the file (placeholder content for now)
+            const markdown = '# 🛒 Shopping list\n\n_Auto-generated — do not edit by hand._\n';
+            fs.writeFileSync('shopping-list.md', markdown);
+
+      - name: Commit shopping list
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add shopping-list.md
+          git diff --cached --quiet || git commit -m "Update shopping list"
+          git push
