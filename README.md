@@ -53,7 +53,7 @@ I get way more ideas than I have time (or money) for. This repo is where they la
 
 ## Related repos
 
-- [homelab](../../homelab) - my self-hosted infrastructure and docker setup
+- [homelab](https://github.com/albinkarlsson1999/homelab) - my self-hosted infrastructure and docker setup
 
 **Finished projects will be linked here as they get their own repos**
 
